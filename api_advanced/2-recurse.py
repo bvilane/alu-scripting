@@ -1,32 +1,27 @@
 #!/usr/bin/python3
-""" 2-recurse.py """
+"""get hot post function"""
+
+
+import json
 import requests
+import sys
 
 
-def recurse(subreddit, hot_list=[], after=None):
-    """ returns list with titles of all hot articles in a subreddit """
-    url = 'https://www.reddit.com/r/{}/hot.json'.format(subreddit)
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    params = {'after': after}
-    response = requests.get(
-                                url,
-                                headers=headers,
-                                params=params,
-                                allow_redirects=False
-                            )
-    if response.status_code == 200:
-        data = response.json().get('data')
-        if data is not None:
-            children = data.get('children')
-            if children is not None:
-                for child in children:
-                    hot_list.append(child.get('data').get('title'))
-                after = data.get('after')
-                if after is not None:
-                    return recurse(subreddit, hot_list, after)
-                else:
-                    return hot_list
-        else:
-            return hot_list
-    else:
+def recurse(subreddit,  hot_list=[], after=None):
+    """get top all hot post"""
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    headers = {"User-Agent": "Mozilla/5.0"}
+    result = requests.get(url,
+                          headers=headers,
+                          params={"after": after},
+                          allow_redirects=False)
+    listing = []
+    if result.status_code != 200:
         return None
+    body = json.loads(result.text)
+    if body["data"]["after"] is not None:
+        children = body["data"]["children"]
+        newlist = hot_list + [i["data"]["title"] for i in children]
+        return recurse(subreddit, newlist, body["data"]["after"])
+    else:
+        return hot_list

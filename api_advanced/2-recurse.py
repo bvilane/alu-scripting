@@ -6,6 +6,7 @@ import json
 import requests
 import sys
 
+
 def recurse(subreddit, hot_list=[], after=None):
     """get top all hot post"""
     url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
@@ -27,4 +28,3 @@ def recurse(subreddit, hot_list=[], after=None):
         return recurse(subreddit, newlist, body["data"]["after"])
     else:
         return hot_list
-

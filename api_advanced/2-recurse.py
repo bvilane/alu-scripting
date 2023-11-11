@@ -19,12 +19,16 @@ def recurse(subreddit, hot_list=[], after=None):
     
     if result.status_code != 200:
         return None
+    
     body = json.loads(result.text)
+    
     if 'data' not in body or 'children' not in body['data']:
         return None  # Invalid subreddit
+    
     if body["data"]["after"] is not None:
         children = body["data"]["children"]
         newlist = hot_list + [i["data"]["title"] for i in children]
         return recurse(subreddit, newlist, body["data"]["after"])
     else:
         return hot_list
+

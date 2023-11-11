@@ -11,25 +11,16 @@ def recurse(subreddit, hot_list=[], after=None):
     url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
     headers = {"User-Agent": "Mozilla/5.0"}
     
-    # Check if subreddit exists
-    check_url = "https://www.reddit.com/r/{}/about.json".format(subreddit)
-    check_result = requests.get(check_url, headers=headers)
-    
-    if check_result.status_code != 200:
-        return None  # Invalid subreddit
-    
     result = requests.get(url,
                           headers=headers,
                           params={"after": after},
                           allow_redirects=True)
     
-    listing = []
-    
     if result.status_code != 200:
         return None
-    
     body = json.loads(result.text)
-    
+    if 'data' not in body or 'children' not in body['data']:
+        return None  # Invalid subreddit
     if body["data"]["after"] is not None:
         children = body["data"]["children"]
         newlist = hot_list + [i["data"]["title"] for i in children]

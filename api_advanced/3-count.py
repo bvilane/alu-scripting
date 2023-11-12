@@ -28,10 +28,11 @@ def count_words(subreddit, word_list, after="", words_count={}):
      for article in hot_articles]
 
     # loop through all titles
-    for title in hot_titles:
-    title_words = title.lower().split()
-    for word in words:
-        words_count[word] += title_words.count(word.lower())
+    for i in range(len(hot_titles)):
+        for title_word in hot_titles[i].lower().split():
+            for word in words:
+                if word.lower() == title_word:
+                    words_count[word] = words_count.get(word) + 1
 
     if has_next:
         return count_words(subreddit, word_list, after, words_count)

@@ -44,7 +44,7 @@ def count_words(subreddit, word_list, after='', word_dict={}):
             lower = [word.lower() for word in title.split(' ')]
 
             for word in word_dict.keys():
-                word_dict[word] += lower.count(word)
+                word_dict[word] += lower.count(word.lower())
 
     except Exception:
         return None

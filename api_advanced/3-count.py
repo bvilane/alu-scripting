@@ -1,72 +1,52 @@
 #!/usr/bin/python3
+"""Write a recursive function that queries
+ the Reddit API, parses the title of all hot articles,
+ and prints a sorted count of given keywords"""
 
-"""search post function"""
 
-import json
-import operator
 import requests
 
 
-def count_words(subreddit, word_list, after=None):
-    """get all the keyword count"""
+def count_words(subreddit, word_list, after='', word_dict={}):
+    """ A function that queries the Reddit API parses the title of
+    all hot articles, and prints a sorted count of given keywords
+    (case-insensitive, delimited by spaces.
+    Javascript should count as javascript, but java should not).
+    If no posts match or the subreddit is invalid, it prints nothing.
+    """
 
-    if len(word_list) == 0:
-        print(None)
-        return
-    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    headers = {"User-Agent": "Mozilla/5.0"}
-    result = requests.get(url,
-                          headers=headers,
-                          params={"after": after},
-                          allow_redirects=False)
-    if result.status_code != 200:
+    if not word_dict:
+        for word in word_list:
+            if word.lower() not in word_dict:
+                word_dict[word.lower()] = 0
+
+    if after is None:
+        wordict = sorted(word_dict.items(), key=lambda x: (-x[1], x[0]))
+        for word in wordict:
+            if word[1]:
+                print('{}: {}'.format(word[0], word[1]))
         return None
-    body = json.loads(result.text)
-    if body["data"]["after"] is not None:
-        newlist = word_list
-        if type(word_list[0]) is str:
-            temp = []
-            for i in word_list:
-                if not any(j['key'].lower() == i.lower() for j in temp):
-                    temp.append({"key": i.lower(), "count": 0, "times": 1})
-                else:
-                    item = list(filter(
-                                lambda search: search['key'] == i.lower(),
-                                temp))
-                    if len(item) > 0:
-                        item[0]["times"] = item[0]["times"] + 1
-            newlist = temp
-        for i in newlist:
-            for j in body["data"]["children"]:
-                for k in j["data"]["title"].lower().split():
-                    if i["key"] == k:
-                        i["count"] = i["count"] + 1
-        return count_words(subreddit, newlist, body["data"]["after"])
-    else:
-        newlist = word_list
-        if type(word_list[0]) is str:
-            temp = []
-            for i in word_list:
-                if not any(j['key'].lower() == i.lower() for j in temp):
-                    temp.append({"key": i.lower(), "count": 0, "times": 1})
-                else:
-                    item = list(filter(
-                                lambda search: search['key'] == i.lower(),
-                                temp))
-                    if len(item) > 0:
-                        item[0]["times"] = item[0]["times"] + 1
-            newlist = temp
-        for i in newlist:
-            for j in body["data"]["children"]:
-                for k in j["data"]["title"].lower().split():
-                    if i["key"] == k:
-                        i["count"] = i["count"] + 1
-        key = operator.itemgetter("key")
-        sorted_list = sorted(word_list, key=key)
-        key = operator.itemgetter("count")
-        sorted_list = sorted(sorted_list, key=key, reverse=True)
-        word_list = sorted_list
-        for i in sorted_list:
-            if i["count"] > 0:
-                print("{}: {}".format(i["key"], i["count"]))
-        return
+
+    url = 'https://www.reddit.com/r/{}/hot/.json'.format(subreddit)
+    header = {'user-agent': 'redquery'}
+    parameters = {'limit': 100, 'after': after}
+    response = requests.get(url, headers=header, params=parameters,
+                            allow_redirects=False)
+
+    if response.status_code != 200:
+        return None
+
+    try:
+        hot = response.json()['data']['children']
+        aft = response.json()['data']['after']
+        for post in hot:
+            title = post['data']['title']
+            lower = [word.lower() for word in title.split(' ')]
+
+            for word in word_dict.keys():
+                word_dict[word] += lower.count(word)
+
+    except Exception:
+        return None
+
+    count_words(subreddit, word_list, aft, word_dict)
